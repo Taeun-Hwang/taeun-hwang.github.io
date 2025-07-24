@@ -8,7 +8,7 @@
     
     | 파일 명 | 설명 |
     | --- | --- |
-    | [.htaccess](SMS 발송 코드/.htaccess) | 기본 페이지 설정 및 HTTPS 강제 리디렉션 설정 |
+    | [.htaccess](SMS%20발송%20코드/.htaccess) | 기본 페이지 설정 및 HTTPS 강제 리디렉션 설정 |
     | [send_form.php](SMS 발송 코드/send_form.php) | SMS 입력 폼 페이지 (메인 화면) |
     | [aligo_send.php](SMS 발송 코드/aligo_send.php) | 실제로 Aligo API를 통해 SMS 발송 요청 처리 |
     | [aligo_remain.php](SMS 발송 코드/aligo_remain.php) | 잔여 문자 수량 조회용 (관리 도구) |
