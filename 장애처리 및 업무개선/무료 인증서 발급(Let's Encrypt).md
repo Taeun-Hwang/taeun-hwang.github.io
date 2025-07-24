@@ -1,14 +1,14 @@
 # 무료 인증서 발급(Let's Encrypt)
 
 1. 패키지 설치
-    #certbot : Let's Encrypt에서 무료 SSL 인증서를 발급받고 갱신하는 **기본 클라이언트**
-    sudo dnf install epel-release
+#certbot : Let's Encrypt에서 무료 SSL 인증서를 발급받고 갱신하는 **기본 클라이언트**
+sudo dnf install epel-release
 
-    #python3-certbot-nginx : certbot이 Nginx 웹 서버와 직접 연동될 수 있도록 해주는 플러그인,
-    #인증서 발급 시 Nginx 설정을 자동으로 탐색하고 수정하여 SSL 설정을 적용,
-    #server 블록에 ssl_certificate, ssl_certificate_key 자동 추가,
-    #또한 인증서 갱신 시에도 Nginx와 연동하여 재시작이나 설정 반영이 자동 수행
-    sudo dnf install certbot python3-certbot-nginx
+#python3-certbot-nginx : certbot이 Nginx 웹 서버와 직접 연동될 수 있도록 해주는 플러그인,
+#인증서 발급 시 Nginx 설정을 자동으로 탐색하고 수정하여 SSL 설정을 적용,
+#server 블록에 ssl_certificate, ssl_certificate_key 자동 추가,
+#또한 인증서 갱신 시에도 Nginx와 연동하여 재시작이나 설정 반영이 자동 수행
+sudo dnf install certbot python3-certbot-nginx
     
     
 2. 인증서 발급
@@ -25,43 +25,51 @@
 3. Apache  및 Nginx 적용
     
     인증서 파일 위치 /etc/letsencrypt/live/test.com/fullchain.pem,
-                    /etc/letsencrypt/live/test.com/privkey.pem
+                               /etc/letsencrypt/live/test.com/privkey.pem
     
     <Apache 예시>
-    <VirtualHost *:443>
-        ServerName test.com
-        ServerAlias www.test.com
-        DocumentRoot /var/www/html
-        SSLEngine on
-        SSLCertificateFile /etc/letsencrypt/live/taeun.store/fullchain.pem
-        SSLCertificateKeyFile /etc/letsencrypt/live/taeun.store/privkey.pem
     
-        <Directory /var/www/html>
-           Options Indexes FollowSymLinks
-           AllowOverride All
-           Require all granted
-          </Directory>
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
+    <VirtualHost *:443>
+    
+    ServerName test.com
+    ServerAlias www.test.com
+    DocumentRoot /var/www/html
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/taeun.store/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/taeun.store/privkey.pem
+    
+    <Directory /var/www/html>
+    
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+    
+    </Directory>
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+    
     </VirtualHost>
     
     <Nginx 예시>
+    
     server {
-        listen 443 ssl;
-        server_name test.com www.test.com;
-        ssl_certificate     /etc/letsencrypt/live/taeun.store/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/taeun.store/privkey.pem;
-        ssl_protocols       TLSv1.2 TLSv1.3;
-        ssl_ciphers         HIGH:!aNULL:!MD5;
-        root /var/www/html;
-        index index.html index.php;
-        location / {
-        try_files $uri $uri/ =404;
-        }
+    
+    listen 443 ssl;
+    server_name test.com www.test.com;
+    ssl_certificate     /etc/letsencrypt/live/taeun.store/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/taeun.store/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    root /var/www/html;
+    index index.html index.php;
+    location / {
+    try_files $uri $uri/ =404;
+    }
     
     }
     
-5. 자동 갱신 여부 확인
+4. 자동 갱신 여부 확인
+    
     #systemd 기반 확인
     systemctl list-timers | grep certbot
     
@@ -80,31 +88,50 @@
     [root@Rocky9 ~]$  systemctl list-timers certbot-renew.timer
     
     NEXT                        LEFT     LAST                        PASSED       UNIT                ACTIVATES
+    
     Thu 2025-04-10 04:12:29 KST 13h left Wed 2025-04-09 13:06:10 KST 1h 18min ago certbot-renew.timer certbot-renew.service
     
     NEXT :  certbot 갱신 명령이 다음에 실행될 시간
+    
     LEFT : 지금으로부터 약 13시간 후에 실행된다는 뜻
+    
     LAST : certbot이 마지막으로 실행된 시각
+    
     PASSED : 마지막 실행 시각으로부터 1시간 18분 경과
+    
     UNIT : 타이머 유닛의 이름
+    
     ACTIVATES : 타이머가 호출하는 실제 서비스. 즉, 내부적으로 certbot renew 명령이 실행
     
     [root@Rocky9 ~]$  sudo certbot certificates
+    
     Saving debug log to /var/log/letsencrypt/letsencrypt.log
-    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    Found the following certs:
-    Certificate Name: test.com
-    Serial Number: 5aeec2cc7ae6814fd23b7f6f31152fb9b40
-    Key Type: ECDSA
-    Domains: test.com www.test.com
-    Expiry Date: 2025-07-08 03:27:01+00:00 (VALID: 89 days)
-    Certificate Path: /etc/letsencrypt/live/test.com/fullchain.pem
-    Private Key Path: /etc/letsencrypt/live/test.com/privkey.pem
+    
     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     
-6. 와일드 카드 인증서 발급
-   와일드 카드 인증서는 HTTP-01 방식으로는 검증이 불가능 하여 반드시 DNS-01 방식(TXT 레코드 인증)으로 만 가능
-   sudo certbot certonly --manual \
+    Found the following certs:
+    
+    Certificate Name: test.com
+    
+    Serial Number: 5aeec2cc7ae6814fd23b7f6f31152fb9b40
+    
+    Key Type: ECDSA
+    
+    Domains: test.com www.test.com
+    
+    Expiry Date: 2025-07-08 03:27:01+00:00 (VALID: 89 days)
+    
+    Certificate Path: /etc/letsencrypt/live/test.com/fullchain.pem
+    
+    Private Key Path: /etc/letsencrypt/live/test.com/privkey.pem
+    
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    
+5. 와일드 카드 인증서 발급
+    
+    와일드 카드 인증서는 HTTP-01 방식으로는 검증이 불가능 하여 반드시 DNS-01 방식(TXT 레코드 인증)으로 만 가능
+    
+    sudo certbot certonly --manual \
     --preferred-challenges dns \
     -d "*.test.com" -d test.com
     
@@ -120,15 +147,20 @@
     ```
         - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Please deploy a DNS TXT record under the name:
-        _acme-challenge.test.com.
+    
+        _acme-challenge.taeun.store.
+    
         with the following value:
+    
         dIkNWV-MD-pqiQtmNrCBlvDJrSLzzWOfJuMbGLf8KFs
+    
         Before continuing, verify the TXT record has been deployed. Depending on the DNS
         provider, this may take some time, from a few seconds to multiple minutes. You can
         check if it has finished deploying with aid of online tools, such as the Google
         Admin Toolbox: <https://toolbox.googleapps.com/apps/dig/#TXT/_acme-challenge.taeun.store>.
         Look for one or more bolded line(s) below the line ';ANSWER'. It should show the
         value(s) you've just added.
+    
         - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Press Enter to Continue
     
@@ -160,7 +192,7 @@
     
     ![image.png](%E1%84%86%E1%85%AE%E1%84%85%E1%85%AD%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%8C%E1%85%B3%E1%86%BC%E1%84%89%E1%85%A5%20%E1%84%87%E1%85%A1%E1%86%AF%E1%84%80%E1%85%B3%E1%86%B8(Let's%20Encrypt)%20238aef0fed13801792b1e1b0e82283b2/image.png)
     
-7. API 키 방식
+6. API 키 방식
     
     DNS 레코드 등록을 API 키 방식으로 가능
     
@@ -187,7 +219,7 @@
     #아래 URL에서 설치 가능한 DNS 플러그인 확인 가능
     https://pypi.org/search/?q=certbot-dns 
     
-8. conf 자동 기입
+7. conf 자동 기입
     
     certonly 가 아닌 --apache 옵션을 주변 자동으로 /etc/httpd/conf 나 conf.d의  ServerName 에서 해당 도메인(test.com) 가 있는 VirtualHost 블록을 찾아 아래 인증서 부분 구문을 자동 추가됨, 하지만 소스 컴파이로 설치 할경우 링크 파일을 /etc/httpd에 만들어 주거나 apache-server-root 옵션으로 디렉토리를 지정
     
