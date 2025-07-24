@@ -9,16 +9,16 @@
     | 파일 명 | 설명 |
     | --- | --- |
     | [.htaccess](SMS%20발송%20코드/.htaccess) | 기본 페이지 설정 및 HTTPS 강제 리디렉션 설정 |
-    | [send_form.php](SMS 발송 코드/send_form.php) | SMS 입력 폼 페이지 (메인 화면) |
-    | [aligo_send.php](SMS 발송 코드/aligo_send.php) | 실제로 Aligo API를 통해 SMS 발송 요청 처리 |
-    | [aligo_remain.php](SMS 발송 코드/aligo_remain.php) | 잔여 문자 수량 조회용 (관리 도구) |
-    | [aligo_sms_list.php](SMS 발송 코드/aligo_sms_list.php) | 발송 내역 확인용 페이지 |
-    | [aligo_list.php](SMS 발송 코드/aligo_list.php) | 등록된 메시지 템플릿 리스트 조회용 |
-    | [config.php](SMS 발송 코드/config.php) | Aligo API 연동용 계정 설정 포함 |
-    | [navbar.php](SMS 발송 코드/navbar.php) | 공통 네비게이션 바. `.user.ini`로 자동 포함됨 |
-    | [.user.ini](SMS 발송 코드/.user.ini) | 모든 PHP 페이지에 `navbar.php` 자동 포함 |
-    | [address_book.json](SMS 발송 코드/address_book.json) | 연락처 저장 JSON 파일 |
-    | [address_book_edit.php](SMS 발송 코드/address_book_edit.php.) | 주소록 수정 페이지 |
+    | [send_form.php](SMS%20발송%20코드/send_form.php) | SMS 입력 폼 페이지 (메인 화면) |
+    | [aligo_send.php](SMS%20발송%20코드/aligo_send.php) | 실제로 Aligo API를 통해 SMS 발송 요청 처리 |
+    | [aligo_remain.php](SMS%20발송%20코드/aligo_remain.php) | 잔여 문자 수량 조회용 (관리 도구) |
+    | [aligo_sms_list.php](SMS%20발송%20코드/aligo_sms_list.php) | 발송 내역 확인용 페이지 |
+    | [aligo_list.php](SMS%20발송%20코드/aligo_list.php) | 등록된 메시지 템플릿 리스트 조회용 |
+    | [config.php](SMS%20발송%20코드/config.php) | Aligo API 연동용 계정 설정 포함 |
+    | [navbar.php](SMS%20발송%20코드/navbar.php) | 공통 네비게이션 바. `.user.ini`로 자동 포함됨 |
+    | [.user.ini](SMS%20발송%20코드/.user.ini) | 모든 PHP 페이지에 `navbar.php` 자동 포함 |
+    | [address_book.json](SMS%20발송%20코드/address_book.json) | 연락처 저장 JSON 파일 |
+    | [address_book_edit.php](SMS%20발송%20코드/address_book_edit.php.) | 주소록 수정 페이지 |
     
     
 3. 포로세스 및 포트 다운, 에러 문자 감지시 
