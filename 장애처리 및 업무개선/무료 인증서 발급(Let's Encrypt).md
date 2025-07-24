@@ -1,14 +1,14 @@
 # 무료 인증서 발급(Let's Encrypt)
 
 1. 패키지 설치
-#certbot : Let's Encrypt에서 무료 SSL 인증서를 발급받고 갱신하는 **기본 클라이언트**
-sudo dnf install epel-release
+    #certbot : Let's Encrypt에서 무료 SSL 인증서를 발급받고 갱신하는 **기본 클라이언트**
+    sudo dnf install epel-release
 
-#python3-certbot-nginx : certbot이 Nginx 웹 서버와 직접 연동될 수 있도록 해주는 플러그인,
-#인증서 발급 시 Nginx 설정을 자동으로 탐색하고 수정하여 SSL 설정을 적용,
-#server 블록에 ssl_certificate, ssl_certificate_key 자동 추가,
-#또한 인증서 갱신 시에도 Nginx와 연동하여 재시작이나 설정 반영이 자동 수행
-sudo dnf install certbot python3-certbot-nginx
+    #python3-certbot-nginx : certbot이 Nginx 웹 서버와 직접 연동될 수 있도록 해주는 플러그인,
+    #인증서 발급 시 Nginx 설정을 자동으로 탐색하고 수정하여 SSL 설정을 적용,
+    #server 블록에 ssl_certificate, ssl_certificate_key 자동 추가,
+    #또한 인증서 갱신 시에도 Nginx와 연동하여 재시작이나 설정 반영이 자동 수행
+    sudo dnf install certbot python3-certbot-nginx
     
     
 2. 인증서 발급
