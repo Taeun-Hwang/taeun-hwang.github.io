@@ -194,7 +194,7 @@ Copyright. Sohee Kim(Wantedlab) all rights reserved.
 
 ![](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://wanted.notion.site/8f25cbcf4a0c4c379474eb8920cf4cac)
 
-[SSL Proxy](Infra%20%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%8B%E1%85%A7%E1%86%BC%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%AA%E1%86%BC%E1%84%90%E1%85%A2%E1%84%8B%E1%85%AE%E1%86%AB%2059eb04395d454124b5fe0af1511fb6dc/SSL%20Proxy%20237aef0fed138093b1c8f1d8ecfc2742.md)
+[SSL Proxy](https://github.com/Taeun-Hwang/taeun-hwang.github.io/blob/main/Infra%20%EC%9A%B4%EC%98%81%EC%9E%90%20%ED%99%A9%ED%83%9C%EC%9A%B4/Apache%20%EC%97%90%EC%84%9C%20%ED%8F%89%ED%8C%90%EB%8F%84%20%EA%B8%B0%EB%B0%98%20IP%20%EC%B0%A8%EB%8B%A8.md)
 
 [무료 인증서 발급(Let's Encrypt)](Infra%20%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%8B%E1%85%A7%E1%86%BC%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%AA%E1%86%BC%E1%84%90%E1%85%A2%E1%84%8B%E1%85%AE%E1%86%AB%2059eb04395d454124b5fe0af1511fb6dc/%E1%84%86%E1%85%AE%E1%84%85%E1%85%AD%20%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%8C%E1%85%B3%E1%86%BC%E1%84%89%E1%85%A5%20%E1%84%87%E1%85%A1%E1%86%AF%E1%84%80%E1%85%B3%E1%86%B8(Let's%20Encrypt)%20238aef0fed13801792b1e1b0e82283b2.md)
 
