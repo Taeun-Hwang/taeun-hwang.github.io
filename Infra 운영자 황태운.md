@@ -194,16 +194,16 @@ Copyright. Sohee Kim(Wantedlab) all rights reserved.
 
 ![](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://wanted.notion.site/8f25cbcf4a0c4c379474eb8920cf4cac)
 
-[SSL Proxy](Infra%20%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%8B%E1%85%A7%E1%86%BC%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%AA%E1%86%BC%E1%84%90%E1%85%A2%E1%84%8B%E1%85%AE%E1%86%AB/SSL%20Proxy.md)
+[SSL Proxy](Infra%20운영자%20황태운/SSL%20Proxy.md)
 
-[무료 인증서 발급(Let's Encrypt)](Infra%20%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%8B%E1%85%A7%E1%86%BC%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%AA%E1%86%BC%E1%84%90%E1%85%A2%E1%84%8B%E1%85%AE%E1%86%AB/무료%20인증서%20발급(Let's%20Encrypt).md)
+[무료 인증서 발급(Let's Encrypt)](Infra%20운영자%20황태운/무료%20인증서%20발급(Let's%20Encrypt).md)
 
-[Linux 장애 및 에러 종합](Infra%20%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%8B%E1%85%A7%E1%86%BC%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%AA%E1%86%BC%E1%84%90%E1%85%A2%E1%84%8B%E1%85%AE%E1%86%AB/Linux%20장애%20및%20에러%20종합.md)
+[Linux 장애 및 에러 종합](Infra%20운영자%20황태운/Linux%20장애%20및%20에러%20종합.md)
 
-[SMS 발송 코드](Infra%20%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%8B%E1%85%A7%E1%86%BC%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%AA%E1%86%BC%E1%84%90%E1%85%A2%E1%84%8B%E1%85%AE%E1%86%AB/SMS%20발송%20코드.md)
+[SMS 발송 코드](Infra%20운영자%20황태운/SMS%20발송%20코드.md)
 
-[Apache 에서 평판도 기반 IP 차단](Infra%20%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%8B%E1%85%A7%E1%86%BC%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%AA%E1%86%BC%E1%84%90%E1%85%A2%E1%84%8B%E1%85%AE%E1%86%AB/Apache%20에서%20평판도%20기반%20IP%20차단.md)
+[Apache 에서 평판도 기반 IP 차단](Infra%20운영자%20황태운/Apache%20에서%20평판도%20기반%20IP%20차단.md)
 
-[IP 평판도 조회](Infra%20%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%8B%E1%85%A7%E1%86%BC%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%AA%E1%86%BC%E1%84%90%E1%85%A2%E1%84%8B%E1%85%AE%E1%86%AB/IP%20평판도%20조회.md)
+[IP 평판도 조회](Infra%20운영자%20황태운/IP%20평판도%20조회.md)
 
-[logrotate 설정 방법](Infra%20%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%8B%E1%85%A7%E1%86%BC%E1%84%8C%E1%85%A1%20%E1%84%92%E1%85%AA%E1%86%BC%E1%84%90%E1%85%A2%E1%84%8B%E1%85%AE%E1%86%AB/logrotate%20설정%20방법.md)
+[logrotate 설정 방법](Infra%20운영자%20황태운/logrotate%20설정%20방법.md)
