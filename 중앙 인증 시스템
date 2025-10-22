@@ -1,0 +1,129 @@
+중앙 인증 시스템 구축 가이드: SSSD + LDAP/AD + RADIUS 통합 (Word용)
+
+1. 아키텍처 개요 및 구성 요소 역할
+
+이 가이드는 대규모 서버 환경(1000대 이상)에서 중앙 집중식 계정 관리(ID Mapping)와 보안 인증(Authentication)을 통합하는 표준 아키텍처 구축 방법을 설명합니다. 시스템의 안정성과 보안성을 극대화하기 위해 계정 속성 정보와 비밀번호 검증 역할을 분리하여 운영합니다.
+
+1.1. 구성 요소 역할 비교
+
+구성 요소
+
+서버 역할
+
+주요 기능
+
+관리 정보
+
+LDAP / AD
+
+계정 관리 서버
+
+사용자 계정의 속성 정보(UID, GID, 쉘 경로 등)를 중앙에서 제공하는 ID 제공자(ID Provider) 역할.
+
+계정의 UID, GID, 홈 디렉토리, 그룹 정보
+
+RADIUS
+
+계정 관리 서버
+
+사용자가 입력한 비밀번호의 유효성 검증을 전담하는 인증 서버(Auth Server) 역할.
+
+계정의 비밀번호 및 MFA(Multi-Factor Authentication) 정보
+
+SSSD
+
+WEB/DB 서버 (클라이언트)
+
+중앙 서버에서 가져온 ID 및 인증 정보를 통합하고 로컬에 캐싱하여 성능과 안정성을 높이는 중개자 역할.
+
+캐싱된 사용자 속성 및 인증 정보
+
+2. 중앙 서버 설정 (계정 관리 서버)
+
+중앙 서버는 사용자 계정의 속성 정보와 인증 처리를 담당합니다.
+
+2.1. LDAP / AD 서버 설정 (ID Mapping)
+
+용도: 모든 WEB/DB 서버에 계정의 속성 정보(UID, GID, 쉘 등)를 제공합니다.
+
+주요 작업 1: LDAP 또는 AD 서버를 구축하고 서비스를 시작합니다.
+
+주요 작업 2: taeun 계정을 포함하여 모든 사용자의 UID, GID, homeDirectory, loginShell 등의 속성 정보를 중앙 LDAP/AD에 정확하게 등록합니다.
+
+2.2. RADIUS 서버 (FreeRADIUS 기준) 설정 (Authentication)
+
+용도: 로그인 시 사용자의 비밀번호가 맞는지 LDAP/AD에 질의하여 유효성을 검증합니다.
+
+작업 1: 패키지 설치
+
+dnf install freeradius freeradius-utils -y
+
+
+작업 2: 클라이언트 등록
+
+/etc/raddb/clients.conf 파일에 인증 요청을 보낼 WEB/DB 서버 대역과 공유 비밀 키를 등록합니다.
+
+작업 3: LDAP 연동 설정
+
+RADIUS 설정 파일을 수정하여 비밀번호 검증 요청을 중앙 LDAP/AD 서버로 전달하도록 설정합니다.
+
+작업 4: 서비스 시작
+
+systemctl enable radiusd
+systemctl start radiusd
+
+
+3. WEB/DB 서버 설정 (클라이언트)
+
+각 WEB/DB 서버는 SSSD를 설정하여 ID 정보와 인증 정보를 통합합니다.
+
+3.1. SSSD 패키지 설치 및 권한 설정
+
+dnf install sssd sssd-tools -y
+chmod 600 /etc/sssd/sssd.conf
+
+
+3.2. SSSD 설정 파일 (/etc/sssd/sssd.conf) 수정
+
+ID 제공자(id_provider)와 인증 제공자(auth_provider)를 분리하여 설정합니다.
+
+[sssd]
+domains = files, ldap_radius_integrated 
+services = nss, pam
+
+[domain/ldap_radius_integrated]
+# --- ID Mapping (계정 속성 - LDAP/AD 서버 연동) ---
+id_provider = ldap 
+ldap_uri = ldap://[LDAP/AD 서버 IP] 
+ldap_search_base = [검색 기준] 
+
+# --- Authentication (비밀번호 검증 - RADIUS 서버 연동) ---
+auth_provider = radius
+radius_server = [RADIUS 서버 IP]
+radius_secret = VerySecureSecretKey! 
+radius_port = 1812
+
+access_provider = permit 
+cache_credentials = true 
+
+
+3.3. PAM 연동 및 서비스 재시작
+
+PAM 설정 수정
+
+SSH 로그인 시 SSSD를 통해 인증하도록 /etc/pam.d/sshd 파일을 수정합니다.
+
+# /etc/pam.d/sshd 파일 상단에 추가
+auth        sufficient    pam_sss.so
+
+
+서비스 재시작
+
+설정 변경 사항을 적용합니다.
+
+systemctl restart sssd
+
+
+3.4. 최종 테스트
+
+중앙에서 관리하는 계정으로 WEB/DB 서버에 SSH 로그인을 시도하여, 계정 정보 조회(LDAP/AD)와 비밀번호 검증(RADIUS)이 정상적으로 이루어지는지 확인합니다.
