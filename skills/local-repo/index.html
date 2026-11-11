@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>로컬 저장소 설정 방법 – 황태운</title>
+  <meta name="description" content="Rocky Linux 9 ISO를 이용한 로컬 저장소(Master-Slave) 구축 방법" />
+  <meta name="theme-color" content="#1a73e8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #52606d;
+      --accent: #1a73e8;
+      --accent-soft: #e8f0fe;
+      --border: #e4e7eb;
+      --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121417;
+        --card: #1c1f24;
+        --text: #e8eaed;
+        --muted: #9aa0a6;
+        --accent: #8ab4f8;
+        --accent-soft: #1e3a5f;
+        --border: #2d3138;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.28);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { color-scheme: light dark; }
+    body {
+      font-family: "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      margin: 0;
+      padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 32px);
+    }
+    main { max-width: 860px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    h1, h2, h3 { color: var(--accent); line-height: 1.35; margin: 0 0 0.6rem; }
+    h1 { font-size: clamp(1.6rem, 3vw, 2.1rem); color: var(--text); }
+    h2 { font-size: 1.25rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent-soft); margin: 2rem 0 1rem; }
+    h3 { font-size: 1.05rem; margin-top: 1.4rem; }
+    .lead { color: var(--muted); font-size: 1.05rem; }
+    .tagline {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 500;
+      font-size: 0.92rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      margin-bottom: 0.9rem;
+    }
+    .back-link { display: inline-block; margin-bottom: 1.2rem; font-weight: 500; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 3vw, 28px);
+      margin-bottom: 1.4rem;
+    }
+    ul { padding-left: 1.3rem; }
+    li { margin: 0.4rem 0; }
+    pre, code {
+      font-family: ui-monospace, Consolas, monospace;
+      background: var(--accent-soft);
+      border-radius: 6px;
+    }
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    code { padding: 0.15rem 0.4rem; font-size: 0.92em; }
+    .img-wrap {
+      margin: 1rem 0;
+      text-align: center;
+    }
+    .img-wrap img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .img-caption {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      max-width: 860px;
+      margin: 0.5rem auto 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="../../index.html" class="back-link">← 메인으로</a>
+
+    <header>
+      <p class="tagline">시스템 인프라 운영</p>
+      <h1>로컬 저장소 설정 방법</h1>
+      <p class="lead">Rocky Linux 9 ISO를 이용해 마스터 서버에서 HTTP/HTTPS로 배포하고, 슬레이브 서버가 이를 사용하도록 설정하는 방법입니다.</p>
+    </header>
+
+    <section>
+      <h2>1. 서문</h2>
+      <p>이 문서는 Rocky Linux 9 ISO를 이용해 로컬 저장소를 구축하고, 마스터 서버는 ISO를 마운트해 HTTP/HTTPS로 배포하며, 슬레이브 서버는 이를 사용하도록 설정하는 방법을 안내합니다.</p>
+    </section>
+
+    <section>
+      <h2>2. 마스터 서버 설정</h2>
+
+      <h3>2-1. 마운트 포인트 생성 및 ISO 마운트</h3>
+      <p><code>/home/rocky_9</code> 경로에 ISO가 마운트됩니다.</p>
+<pre><code>mkdir -p /home/rocky_9
+mount -o loop /mnt/IOS/Rocky_9.iso /home/rocky_9</code></pre>
+
+      <h3>2-2. Apache HTTP 서버 설치 및 ISO 경로 공유</h3>
+<pre><code>dnf install -y httpd
+systemctl enable --now httpd
+ln -s /home/rocky_9 /var/www/html/rocky_9</code></pre>
+
+      <p><code>/etc/httpd/conf.d/repo.conf</code> 내용:</p>
+<pre><code># 80 포트로 들어오는 모든 요청을 https:// 로 리다이렉션
+&lt;VirtualHost *:80&gt;
+    ServerName repo.taeun.store
+    Redirect permanent / https://repo.taeun.store/
+&lt;/VirtualHost&gt;
+
+# HTTPS 가상호스트
+&lt;VirtualHost *:443&gt;
+    ServerName repo.taeun.store
+    DocumentRoot /var/www/html/rocky_9
+
+    # SSL 설정
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/taeun.store-0001/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/taeun.store-0001/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
+
+    # 특정 확장자 재압축 방지
+    SetEnvIfNoCase Request_URI "\.(gz|xz|bz2|zst|rpm|drpm)$" no-gzip dont-vary
+
+    # sendfile/mmap 전송 비활성화로 데이터 깨짐 방지
+    EnableSendfile Off
+    EnableMMAP Off
+
+    # 지정 확장자 파일의 인코딩/변형 차단
+    &lt;FilesMatch "\.(gz|xz|bz2|zst|rpm|drpm)$"&gt;
+        Header unset Content-Encoding
+        Header set Cache-Control "no-transform"
+        SetEnv no-gzip 1
+    &lt;/FilesMatch&gt;
+
+    &lt;Directory /var/www/html/rocky_9&gt;
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;</code></pre>
+      <p>이제 외부에서 HTTP/HTTPS를 통해 dnf, yum으로 접근 가능합니다.</p>
+
+      <h3>2-3. 부팅 시 자동 마운트 설정 (선택)</h3>
+<pre><code>echo '/mnt/IOS/Rocky_9.iso /home/rocky_9 iso9660 loop,ro 0 0' &gt;&gt; /etc/fstab
+mount -a   # 마운트 테스트</code></pre>
+    </section>
+
+    <section>
+      <h2>3. 슬레이브 서버 설정</h2>
+
+      <h3>3-1. 로컬 저장소(repo) 설정 파일 생성</h3>
+      <p>HTTP로 제공된 저장소를 사용하므로 ISO 마운트는 불필요합니다.</p>
+<pre><code>vim /etc/yum.repos.d/local-iso.repo</code></pre>
+<pre><code>[BaseOS]
+name=Hosting Rocky Linux 9 BaseOS (Master HTTPS)
+baseurl=https://repo.taeun.store/BaseOS
+enabled=1
+gpgcheck=0
+
+[AppStream]
+name=Hosting Rocky Linux 9 AppStream (Master HTTPS)
+baseurl=https://repo.taeun.store/AppStream
+enabled=1
+gpgcheck=0</code></pre>
+      <p>dnf는 추가하지 않아도 자동으로 반영됩니다. 패키지 관리자 둘 다 설정됩니다.</p>
+
+      <h3>3-2. 저장소 캐시 갱신 및 테스트</h3>
+<pre><code>dnf clean all
+dnf makecache
+
+# DNS 에러 발생 시 hosts 파일에 repo.taeun.store → 마스터서버 IP 매핑 필요
+
+dnf install -y vim</code></pre>
+
+      <div class="img-wrap">
+        <img src="images/local_repo_makecache.png" alt="dnf makecache 결과" />
+        <p class="img-caption">슬레이브 서버에서 dnf makecache 실행 시 로컬 저장소 인식 확인</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. 참고 사항</h2>
+      <ul>
+        <li>ISO 버전이 고정되므로 최신 보안 업데이트는 반영되지 않습니다.</li>
+        <li>최신 패키지를 원할 경우, 새로운 Rocky Linux ISO를 다운로드하여 교체해야 합니다.</li>
+        <li>내부망 환경에서 대규모 서버 관리 시, Master-HTTP + Slave 구조가 효율적입니다.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>황태운 · 시스템 인프라 운영 관리자</p>
+  </footer>
+</body>
+</html>

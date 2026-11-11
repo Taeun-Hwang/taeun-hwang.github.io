@@ -88,6 +88,10 @@
     }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
+    .skill-link {
+      font-size: 0.92rem;
+      margin-left: 0.3rem;
+    }
     footer {
       max-width: 860px;
       margin: 0.5rem auto 0;
@@ -112,8 +116,13 @@
 
       <h3>OS &amp; 시스템 관리</h3>
       <ul>
-        <li><span class="highlight">Linux</span>: Rocky 9, Ubuntu, RHEL, CentOS</li>
-        <li><span class="highlight">Windows Server</span>: 2016, 2019, AD/Group Policy</li>
+        <li><span class="highlight">Linux</span>: Rocky 9, Ubuntu, RHEL, CentOS
+          <a href="skills/local-repo/index.html" class="skill-link">→ 로컬 저장소 설정 방법 상세</a>
+        </li>
+        <li>
+          <span class="highlight">Windows Server</span>: 2016, 2019, AD/Group Policy
+          <a href="skills/windows-ad/index.html" class="skill-link">→ Windows AD 정책 설정·배포 상세</a>
+        </li>
         <li>WSL 2, WinPE, DISM, 레지스트리 자동화</li>
         <li>KVM/libvirt(virsh), OpenStack 환경 VM 운영</li>
       </ul>
@@ -122,7 +131,9 @@
       <ul>
         <li>Apache, Nginx, PHP, MariaDB, SSL 인증서 구성</li>
         <li>리버스 프록시(SSL 종료), 가상호스트, .htaccess 인증 대체</li>
-        <li>Let’s Encrypt(certbot) HTTP-01 / DNS-01, Cloudflare API DNS 자동화</li>
+        <li>Let’s Encrypt(certbot) HTTP-01 / DNS-01, Cloudflare API DNS 자동화
+          <a href="skills/letsencrypt/index.html" class="skill-link">→ 무료 인증서 발급 상세</a>
+        </li>
       </ul>
 
       <h3>보안 점검·하드닝</h3>
@@ -135,7 +146,9 @@
 
       <h3>보안 &amp; 로그 모니터링</h3>
       <ul>
-        <li>rsyslog, logrotate</li>
+        <li>rsyslog, logrotate
+          <a href="skills/logrotate/index.html" class="skill-link">→ logrotate 설정 방법 상세</a>
+        </li>
         <li>RDP 접근 감지 후 문자 알림 (PowerShell)</li>
         <li>AbuseIPDB 기반 악성 IP 차단</li>
       </ul>

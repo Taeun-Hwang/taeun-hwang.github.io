@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>logrotate 설정 방법 – 황태운</title>
+  <meta name="description" content="logrotate와 rsyslog를 활용한 로그 회전 및 전송 설정 방법" />
+  <meta name="theme-color" content="#1a73e8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #52606d;
+      --accent: #1a73e8;
+      --accent-soft: #e8f0fe;
+      --border: #e4e7eb;
+      --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121417;
+        --card: #1c1f24;
+        --text: #e8eaed;
+        --muted: #9aa0a6;
+        --accent: #8ab4f8;
+        --accent-soft: #1e3a5f;
+        --border: #2d3138;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.28);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { color-scheme: light dark; }
+    body {
+      font-family: "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      margin: 0;
+      padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 32px);
+    }
+    main { max-width: 860px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    h1, h2, h3 { color: var(--accent); line-height: 1.35; margin: 0 0 0.6rem; }
+    h1 { font-size: clamp(1.6rem, 3vw, 2.1rem); color: var(--text); }
+    h2 { font-size: 1.25rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent-soft); margin: 2rem 0 1rem; }
+    h3 { font-size: 1.05rem; margin-top: 1.4rem; }
+    .lead { color: var(--muted); font-size: 1.05rem; }
+    .tagline {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 500;
+      font-size: 0.92rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      margin-bottom: 0.9rem;
+    }
+    .back-link { display: inline-block; margin-bottom: 1.2rem; font-weight: 500; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 3vw, 28px);
+      margin-bottom: 1.4rem;
+    }
+    ul { padding-left: 1.3rem; }
+    li { margin: 0.4rem 0; }
+    pre, code {
+      font-family: ui-monospace, Consolas, monospace;
+      background: var(--accent-soft);
+      border-radius: 6px;
+    }
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    code { padding: 0.15rem 0.4rem; font-size: 0.92em; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.6rem 0.8rem;
+      text-align: left;
+    }
+    th { background: var(--accent-soft); color: var(--accent); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      max-width: 860px;
+      margin: 0.5rem auto 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="../../index.html" class="back-link">← 메인으로</a>
+
+    <header>
+      <p class="tagline">시스템 인프라 운영</p>
+      <h1>logrotate 설정 방법</h1>
+      <p class="lead">애플리케이션 로그와 MySQL general log를 logrotate로 회전하고, rsyslog로 원격 전송하는 설정입니다.</p>
+    </header>
+
+    <section>
+      <h2>1. 애플리케이션 로그 회전 (/etc/logrotate.d/myapp)</h2>
+      <pre><code>/var/log/myapp.log {
+    # 로그를 주간 또는 일간 단위로 회전
+    weekly
+    # 최대 N개의 로그 백업을 보관
+    rotate 4
+    # 회전된 로그 파일을 .gz로 압축
+    compress
+    # 회전 직후의 로그는 압축하지 않고, 다음 회전 시점에 압축
+    # (.1은 그대로 두고 .2.gz, .3.gz 부터 압축)
+    delaycompress
+    # 로그 파일이 없어도 오류 없이 넘어감
+    missingok
+    # 로그 파일이 비어 있으면 회전하지 않음
+    notifempty
+    # 새 로그 파일을 회전 직후 자동 생성
+    create 0640 root root
+    postrotate
+        /bin/kill -HUP $(pidof rsyslogd)
+    endscript
+}</code></pre>
+    </section>
+
+    <section>
+      <h2>2. MySQL General Log 회전</h2>
+      <pre><code>/var/log/mysql_general_log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 mysql mysql
+    # postrotate 안에 있는 명령어가 중복 실행되지 않도록 방지
+    sharedscripts
+    # 로그를 회전한 이후에 실행할 명령어 블럭
+    postrotate
+        mysql --defaults-file=/root/.my.cnf -e "SET GLOBAL general_log = 'OFF';"
+        mysql --defaults-file=/root/.my.cnf -e "SET GLOBAL general_log_file = '/var/log/mysql_general_log';"
+        mysql --defaults-file=/root/.my.cnf -e "SET GLOBAL general_log = 'ON';"
+    endscript
+}</code></pre>
+    </section>
+
+    <section>
+      <h2>3. 시뮬레이션 및 강제 실행</h2>
+      <h3>시뮬레이션 (실제 실행하지 않고 확인)</h3>
+      <pre><code>logrotate -d /etc/logrotate.d/myapp</code></pre>
+
+      <h3>강제 실행</h3>
+      <pre><code>logrotate -f /etc/logrotate.d/myapp</code></pre>
+    </section>
+
+    <section>
+      <h2>4. rsyslog로 로그 전송 (실시간)</h2>
+      <h3>수신 측 활성화 (/etc/rsyslog.conf)</h3>
+      <pre><code># UDP 수신 활성화
+module(load="imudp")
+input(type="imudp" port="514")
+
+# TCP 수신 활성화
+module(load="imtcp")
+input(type="imtcp" port="514")</code></pre>
+
+      <h3>클라이언트 설정 (로그 송신자)</h3>
+      <pre><code># UDP로 전송
+*.* @192.168.0.100:514
+
+# TCP로 전송
+*.* @@192.168.0.100:514</code></pre>
+    </section>
+
+    <section>
+      <h2>5. 개인 텍스트 파일을 rsyslog로 전송</h2>
+      <p>위 방법으로 rsyslog 설정을 했지만 sync가 안 되는 경우 <code>/etc/rsyslog.conf</code>에 아래 설정을 추가합니다.</p>
+
+      <pre><code>local7.* /var/log/myservice.log</code></pre>
+
+      <p>또는 imfile 모듈로 특정 파일을 감시:</p>
+      <pre><code>input(type="imfile"
+    File="/home/taeun/myservice.log"
+    Tag="myservice:"
+    Severity="info"
+    Facility="local7")
+
+local7.* /var/log/myservice.log</code></pre>
+
+      <ul>
+        <li><code>/home/taeun/myservice.log</code> 파일을 계속 감시</li>
+        <li>새 줄이 생기면 로그처럼 처리하고 local7으로 분류</li>
+        <li>local7 로그는 <code>/var/log/myservice.log</code>에 저장</li>
+      </ul>
+
+      <table>
+        <thead>
+          <tr>
+            <th>필드</th>
+            <th>설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>type="imfile"</code></td>
+            <td>rsyslog의 imfile 모듈을 사용해 일반 파일을 로그 입력으로 감시</td>
+          </tr>
+          <tr>
+            <td><code>File="/home/user/myservice.log"</code></td>
+            <td>감시 대상 로그 파일 경로</td>
+          </tr>
+          <tr>
+            <td><code>Tag="myservice:"</code></td>
+            <td>로그 앞에 붙일 식별 태그</td>
+          </tr>
+          <tr>
+            <td><code>Severity="info"</code></td>
+            <td>로그의 심각도(level) 지정</td>
+          </tr>
+          <tr>
+            <td><code>Facility="local7"</code></td>
+            <td>로그의 분류(facility)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>황태운 · 시스템 인프라 운영 관리자</p>
+  </footer>
+</body>
+</html>

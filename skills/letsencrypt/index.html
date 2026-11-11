@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>무료 인증서 발급(Let’s Encrypt) – 황태운</title>
+  <meta name="description" content="Let’s Encrypt 무료 SSL 인증서 발급 및 갱신 설정 방법" />
+  <meta name="theme-color" content="#1a73e8" />
+  <link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+  <main>
+    <a href="../../index.html" class="back-link">← 메인으로</a>
+
+    <header>
+      <p class="tagline">시스템 인프라 운영</p>
+      <h1>무료 인증서 발급(Let’s Encrypt)</h1>
+      <p class="lead">certbot을 이용해 무료 SSL 인증서를 발급하고 Nginx/Apache에 적용하는 방법입니다.</p>
+    </header>
+
+    <section>
+      <h2>1. 패키지 설치</h2>
+      <p>certbot은 Let’s Encrypt에서 무료 SSL 인증서를 발급받고 갱신하는 기본 클라이언트입니다.</p>
+<pre><code>sudo dnf install epel-release
+sudo dnf install certbot python3-certbot-nginx</code></pre>
+      <ul>
+        <li><code>python3-certbot-nginx</code>: certbot이 Nginx와 연동되도록 하는 플러그인</li>
+        <li>인증서 발급 시 Nginx 설정을 자동으로 탐색하고 SSL 설정을 적용</li>
+        <li>server 블록에 <code>ssl_certificate</code>, <code>ssl_certificate_key</code>를 자동 추가</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>2. 인증서 발급</h2>
+      <h3>Nginx 서버용 (자동 설정 포함)</h3>
+<pre><code>sudo certbot --nginx -d test.com -d www.test.com</code></pre>
+
+      <h3>Apache 서버용</h3>
+<pre><code>sudo certbot --apache -d test.com -d www.test.com</code></pre>
+
+      <h3>웹서버 없는 환경 또는 수동 설정 시</h3>
+      <p><code>certonly</code> 옵션은 인증서만 발급하고 웹 설정은 자동 변경하지 않습니다.</p>
+<pre><code>sudo certbot certonly --standalone -d test.com -d www.test.com</code></pre>
+    </section>
+
+    <section>
+      <h2>3. Apache 및 Nginx 적용</h2>
+      <p>인증서 파일 위치:</p>
+      <ul>
+        <li><code>/etc/letsencrypt/live/test.com/fullchain.pem</code></li>
+        <li><code>/etc/letsencrypt/live/test.com/privkey.pem</code></li>
+      </ul>
+
+      <h3>Apache 예시</h3>
+<pre><code>&lt;VirtualHost *:443&gt;
+    ServerName test.com
+    ServerAlias www.test.com
+    DocumentRoot /var/www/html
+
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/taeun.store/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/taeun.store/privkey.pem
+
+    &lt;Directory /var/www/html&gt;
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    &lt;/Directory&gt;
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+&lt;/VirtualHost&gt;</code></pre>
+
+      <h3>Nginx 예시</h3>
+<pre><code>server {
+    listen 443 ssl;
+    server_name test.com www.test.com;
+
+    ssl_certificate     /etc/letsencrypt/live/taeun.store/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/taeun.store/privkey.pem;
+
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    root /var/www/html;
+    index index.html index.php;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}</code></pre>
+    </section>
+
+    <section>
+      <h2>4. 자동 갱신 여부 확인</h2>
+      <h3>systemd 기반 확인</h3>
+<pre><code>systemctl list-timers | grep certbot</code></pre>
+
+      <h3>실제 자동 갱신 시뮬레이션</h3>
+      <p>80 포트로 테스트하므로 Apache나 Nginx는 일시 중지해야 합니다.</p>
+<pre><code>sudo certbot renew --dry-run</code></pre>
+
+      <h3>자동 갱신 제외</h3>
+<pre><code>sudo rm /etc/letsencrypt/renewal/test.com.conf</code></pre>
+
+      <h3>갱신 시도 주기 확인</h3>
+<pre><code>systemctl list-timers certbot-renew.timer</code></pre>
+
+      <h3>발급받은 모든 인증서 정보 확인</h3>
+<pre><code>sudo certbot certificates</code></pre>
+    </section>
+
+    <section>
+      <h2>5. 와일드카드 인증서 발급</h2>
+      <p>와일드카드 인증서는 HTTP-01 방식으로는 검증이 불가능하여 반드시 DNS-01 방식(TXT 레코드 인증)으로만 가능합니다.</p>
+<pre><code>sudo certbot certonly --manual \
+  --preferred-challenges dns \
+  -d "*.test.com" -d test.com</code></pre>
+      <p>이후 출력되는 TXT 레코드 값을 DNS에 등록합니다.</p>
+
+      <h3>가비아 DNS 레코드 등록 예시</h3>
+      <div class="img-wrap">
+        <img src="images/gabia_dns_txt.png" alt="가비아 DNS TXT 레코드 등록" />
+        <p class="img-caption">가비아 DNS에서 _acme-challenge TXT 레코드 등록 화면</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>6. API 키 방식 (Cloudflare 예시)</h2>
+      <p>DNS 레코드 등록을 API 키 방식으로 자동화할 수 있습니다.</p>
+<pre><code>sudo certbot certonly \
+  --dns-cloudflare \
+  --dns-cloudflare-credentials /home/taeun/.secrets/cloudflare.ini \
+  --dns-cloudflare-propagation-seconds 30 \
+  -d "*.test.com" -d test.com</code></pre>
+
+      <h3>cloudflare.ini 파일 예시</h3>
+<pre><code>dns_cloudflare_api_key = 여기에_API_키_입력
+dns_cloudflare_email = 이메일@example.com</code></pre>
+      <p>설치 가능한 DNS 플러그인 확인: <a href="https://pypi.org/search/?q=certbot-dns" target="_blank" rel="noopener">https://pypi.org/search/?q=certbot-dns</a></p>
+    </section>
+
+    <section>
+      <h2>7. conf 자동 기입</h2>
+      <p><code>--apache</code> 옵션 사용 시 ServerName이 일치하는 VirtualHost 블록을 찾아 인증서 설정을 자동 추가합니다. 소스 컴파일로 설치한 경우 경로를 지정하거나 심볼릭 링크를 생성해야 합니다.</p>
+<pre><code>sudo certbot --apache \
+  --apache-server-root /usr/local/apache2 \
+  --apache-vhost-root /usr/local/apache2/conf/extra \
+  -d test.com -d www.test.com</code></pre>
+
+      <h3>심볼릭 링크 생성 예시</h3>
+<pre><code>sudo ln -s /usr/local/apache2/bin/httpd /usr/sbin/httpd
+sudo ln -s /usr/local/apache2/bin/apachectl /usr/sbin/apachectl</code></pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>황태운 · 시스템 인프라 운영 관리자</p>
+  </footer>
+</body>
+</html>

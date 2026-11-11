@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Windows AD 정책 – 황태운</title>
+  <meta name="description" content="AD 서버에서 보안 정책을 생성하고 배포하는 방법" />
+  <meta name="theme-color" content="#1a73e8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #52606d;
+      --accent: #1a73e8;
+      --accent-soft: #e8f0fe;
+      --border: #e4e7eb;
+      --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121417;
+        --card: #1c1f24;
+        --text: #e8eaed;
+        --muted: #9aa0a6;
+        --accent: #8ab4f8;
+        --accent-soft: #1e3a5f;
+        --border: #2d3138;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.28);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { color-scheme: light dark; }
+    body {
+      font-family: "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      margin: 0;
+      padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 32px);
+    }
+    main { max-width: 860px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    h1, h2, h3 { color: var(--accent); line-height: 1.35; margin: 0 0 0.6rem; }
+    h1 { font-size: clamp(1.6rem, 3vw, 2.1rem); color: var(--text); }
+    h2 { font-size: 1.25rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent-soft); margin: 2rem 0 1rem; }
+    h3 { font-size: 1.05rem; margin-top: 1.4rem; }
+    .lead { color: var(--muted); font-size: 1.05rem; }
+    .tagline {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 500;
+      font-size: 0.92rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      margin-bottom: 0.9rem;
+    }
+    .back-link { display: inline-block; margin-bottom: 1.2rem; font-weight: 500; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 3vw, 28px);
+      margin-bottom: 1.4rem;
+    }
+    ol, ul { padding-left: 1.3rem; }
+    li { margin: 0.4rem 0; }
+    .step { margin-bottom: 2.2rem; }
+    .img-wrap {
+      margin: 0.8rem 0 1.2rem;
+      text-align: center;
+    }
+    .img-wrap img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .img-caption {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+    code, pre {
+      font-family: ui-monospace, Consolas, monospace;
+      background: var(--accent-soft);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.92em;
+    }
+    pre {
+      padding: 0.8rem 1rem;
+      overflow-x: auto;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      max-width: 860px;
+      margin: 0.5rem auto 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="../../index.html" class="back-link">← 메인으로</a>
+
+    <header>
+      <p class="tagline">시스템 인프라 운영</p>
+      <h1>Windows AD 정책</h1>
+      <p class="lead">AD 서버에서 보안 정책을 생성한 뒤 대상 서버(OU)에 배포하는 방법입니다.</p>
+    </header>
+
+    <section>
+      <h2>1. 그룹 정책 관리(gpmc.msc)에서 정책 생성</h2>
+
+      <div class="step">
+        <h3>1-1. 정책(GPO) 만들기</h3>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images01.png" alt="그룹 정책 개체에서 새로 만들기" />
+          <p class="img-caption">그룹 정책 개체에서 우클릭 → 새로 만들기</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <h3>1-2. 정책 이름 입력</h3>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images02.png" alt="새 GPO 이름 입력" />
+          <p class="img-caption">새 GPO 대화상자에서 정책 이름 입력</p>
+        </div>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images03.png" alt="정책 이름 확인" />
+          <p class="img-caption">생성할 정책 이름 확인 후 확인</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. 만들 정책(GPO)에 보안 정책 적용</h2>
+      <p>생성한 GPO를 선택한 뒤 편집기를 열어 보안 설정을 구성합니다.</p>
+    </section>
+
+    <section>
+      <h2>3. GPO 편집</h2>
+      <div class="step">
+        <h3>그룹 정책 관리 편집기 열기</h3>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images04.png" alt="GPO 편집 메뉴" />
+          <p class="img-caption">생성한 GPO 우클릭 → 편집</p>
+        </div>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images05.png" alt="편집 메뉴 선택" />
+          <p class="img-caption">편집 메뉴 선택</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <h3>보안 설정 구성</h3>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images06.png" alt="보안 설정 편집" />
+          <p class="img-caption">그룹 정책 관리 편집기에서 보안 설정 항목 구성</p>
+        </div>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images07.png" alt="보안 정책 상세" />
+          <p class="img-caption">계정 정책, 로컬 정책 등 세부 보안 옵션 설정</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. 생성한 정책(GPO)를 서버(OU)에 적용</h2>
+
+      <div class="step">
+        <h3>4-1. 적용할 서버(OU) 확인</h3>
+        <p>실제 적용 대상 서버에서 아래 명령으로 OU 위치를 확인합니다.</p>
+        <pre><code>dsquery computer -name %computername%</code></pre>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images08.png" alt="dsquery 결과" />
+          <p class="img-caption">dsquery로 확인한 대상 서버의 OU (Domain Controllers)</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <h3>4-2. 서버(OU)에 생성한 정책(GPO) 연결</h3>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images09.png" alt="기존 GPO 연결" />
+          <p class="img-caption">대상 OU 우클릭 → 기존 GPO 연결</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <h3>4-3. 생성 정책(GPO) 선택</h3>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images10.png" alt="GPO 선택" />
+          <p class="img-caption">연결할 GPO 선택 (나의 정책)</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <h3>4-4. 정책 상태 및 적용 설정</h3>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images11.png" alt="정책 적용 설정" />
+          <p class="img-caption">연결된 GPO에서 적용 여부 설정</p>
+        </div>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images12.png" alt="적용 및 강제 설정 확인" />
+          <p class="img-caption">적용(아니요/예) 및 연결 사용 상태 확인</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. 정책 업데이트 및 확인</h2>
+      <p>기본적으로 이중화된 AD ↔ AD는 5분 주기, AD ↔ 일반 도메인은 90분 주기로 자동 동기화됩니다. 즉시 적용이 필요하면 일반 도메인 서버에서 아래 명령을 실행합니다.</p>
+
+      <div class="step">
+        <h3>5-1. gpresult로 적용 상태 확인</h3>
+        <pre><code>gpresult /r</code></pre>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images13.png" alt="gpresult 결과" />
+          <p class="img-caption">gpresult /r 로 적용된 그룹 정책 및 마지막 적용 시간 확인</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <h3>5-2. gpresult HTML export</h3>
+        <pre><code>gpresult /h C:\gpresult.html</code></pre>
+        <div class="img-wrap">
+          <img src="images/windows_ad_images14.png" alt="gpresult HTML 보고서" />
+          <p class="img-caption">gpresult /h 로 export한 HTML 보고서 화면</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>황태운 · 시스템 인프라 운영 관리자</p>
+  </footer>
+</body>
+</html>
