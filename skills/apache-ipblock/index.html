@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apache 평판도 기반 IP 차단 – 황태운</title>
+  <meta name="description" content="AbuseIPDB를 이용한 Apache 악성 IP 자동 차단 설정" />
+  <meta name="theme-color" content="#1a73e8" />
+  <link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+  <main>
+    <a href="../../index.html" class="back-link">← 메인으로</a>
+
+    <header>
+      <p class="tagline">시스템 인프라 운영</p>
+      <h1>Apache 평판도 기반 IP 차단</h1>
+      <p class="lead">AbuseIPDB에서 평판도가 낮은 IP를 수집해 Apache 2.2 / 2.4에 맞게 차단 규칙을 자동 생성하는 방법입니다.</p>
+    </header>
+
+    <section>
+      <h2>1. 개요</h2>
+      <ul>
+        <li>Apache 2.2 이하: <code>block_ips_deny.conf</code></li>
+        <li>Apache 2.4 이상: <code>block_ips_require.conf</code></li>
+      </ul>
+      <p><code>httpd.conf</code> 마지막에 아래 줄을 추가한 뒤 Apache를 재시작합니다.</p>
+<pre><code>Include /etc/httpd/conf.d/block_ips_deny.conf</code></pre>
+      <p>추후 crontab으로 주 1회 자동 갱신 예정</p>
+    </section>
+
+    <section>
+      <h2>2. 스크립트 (수정 전)</h2>
+      <p>AbuseIPDB에서 의심 IP를 Export하고 Apache 버전별 파일을 생성하는 초기 스크립트입니다.</p>
+<pre><code>#!/bin/bash
+
+# 기본 설정
+BASE_DIR="/home/myscript/ipblock"
+JSON_FILE="$BASE_DIR/blacklist.json"
+APACHE_BLOCK_DENY_FILE="$BASE_DIR/block_ips_deny.conf"
+APACHE_BLOCK_REQUIRE_FILE="$BASE_DIR/block_ips_require.conf"
+API_KEY="MyKey"
+
+# 1. 디렉토리 확인 및 생성
+if [ ! -d "$BASE_DIR" ]; then
+    echo "Creating directory: $BASE_DIR"
+    mkdir -p "$BASE_DIR"
+fi
+
+# 2. AbuseIPDB에서 JSON 파일 다운로드
+echo "Downloading blacklist from AbuseIPDB..."
+curl -G -k https://api.abuseipdb.com/api/v2/blacklist \
+  --data-urlencode "confidenceMinimum=90" \
+  --data-urlencode "maxAgeInDays=30" \
+  -H "Key: $API_KEY" \
+  -H "Accept: application/json" -o "$JSON_FILE"
+
+if [ $? -ne 0 ] || [ ! -s "$JSON_FILE" ]; then
+    echo "Error: Failed to download blacklist or empty file."
+    exit 1
+fi
+
+# 3. Apache 2.2용 규칙 초기화
+echo "# Auto-generated blacklist for Apache 2.2" &gt; "$APACHE_BLOCK_DENY_FILE"
+echo "# Last updated: $(date)" &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+cat &lt;&lt;EOF &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+&lt;Location "/"&gt;
+    Order allow,deny
+EOF
+
+# 4. Apache 2.4용 규칙 초기화
+echo "# Auto-generated blacklist for Apache 2.4" &gt; "$APACHE_BLOCK_REQUIRE_FILE"
+echo "# Last updated: $(date)" &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+cat &lt;&lt;EOF &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+&lt;Location "/"&gt;
+    &lt;RequireAll&gt;
+EOF
+
+# 5. 국가별로 IP 정리 및 규칙 생성
+echo "Generating Apache block rules grouped by country..."
+cat "$JSON_FILE" | jq -r '.data[] | "\(.countryCode) \(.ipAddress)"' | sort | while read -r country ip; do
+    # Apache 2.2
+    if ! grep -q "######### $country #########" "$APACHE_BLOCK_DENY_FILE"; then
+        echo -e "\n    ######### $country #########" &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+    fi
+    echo "    Deny from $ip" &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+
+    # Apache 2.4
+    if ! grep -q "######### $country #########" "$APACHE_BLOCK_REQUIRE_FILE"; then
+        echo -e "\n        ######### $country #########" &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+    fi
+    echo "        Require not ip $ip" &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+done
+
+# 6. Apache 2.2 마무리
+cat &lt;&lt;EOF &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+    Allow from all
+&lt;/Location&gt;
+EOF
+
+# 7. Apache 2.4 마무리
+cat &lt;&lt;EOF &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+    &lt;/RequireAll&gt;
+&lt;/Location&gt;
+EOF
+
+echo "Apache block rules generated successfully:"
+echo "  - Apache 2.2 file: $APACHE_BLOCK_DENY_FILE"
+echo "  - Apache 2.4 file: $APACHE_BLOCK_REQUIRE_FILE"</code></pre>
+    </section>
+
+    <section>
+      <h2>3. 생성 파일 예시</h2>
+      <h3>Apache 2.2 (block_ips_deny.conf)</h3>
+<pre><code># Auto-generated blacklist for Apache 2.2
+# Last updated: 2025. 01. 03. (금) 15:27:32 KST
+&lt;Location "/"&gt;
+    Order allow,deny
+
+    ######### AD #########
+    Deny from 109.111.112.83
+
+    ######### AE #########
+    Deny from 152.32.181.210
+    Deny from 154.85.78.192
+    Deny from 165.154.217.70
+
+    ######### ZW #########
+    Deny from 197.221.232.44
+    Deny from 197.221.234.19
+
+    Allow from all
+&lt;/Location&gt;</code></pre>
+
+      <h3>Apache 2.4 (block_ips_require.conf)</h3>
+<pre><code>&lt;Location "/"&gt;
+    &lt;RequireAll&gt;
+        ######### AD #########
+        Require not ip 109.111.112.83
+
+        ######### AE #########
+        Require not ip 152.32.181.210
+        Require not ip 154.85.78.192
+
+        ######### ZW #########
+        Require not ip 197.221.232.44
+        Require not ip 197.221.234.19
+    &lt;/RequireAll&gt;
+&lt;/Location&gt;</code></pre>
+    </section>
+
+    <section>
+      <h2>4. 코드 수정</h2>
+      <p><strong>사유:</strong> Apache 2.4 이상에서 기존 코드 에러 발생</p>
+      <p><code>block_ips_require.conf</code>에 <code>Require all granted</code>를 추가하도록 수정했습니다.</p>
+<pre><code>#!/bin/bash
+
+# 기본 설정
+BASE_DIR="/home/myscript/ipblock"
+JSON_FILE="$BASE_DIR/blacklist.json"
+APACHE_BLOCK_DENY_FILE="$BASE_DIR/block_ips_deny.conf"
+APACHE_BLOCK_REQUIRE_FILE="$BASE_DIR/block_ips_require.conf"
+API_KEY="your-api-key-here"
+
+# 1. 디렉토리 확인 및 생성
+if [ ! -d "$BASE_DIR" ]; then
+    echo "Creating directory: $BASE_DIR"
+    mkdir -p "$BASE_DIR"
+fi
+
+# 2. AbuseIPDB에서 JSON 파일 다운로드
+echo "Downloading blacklist from AbuseIPDB..."
+curl -G -k https://api.abuseipdb.com/api/v2/blacklist \
+  --data-urlencode "confidenceMinimum=90" \
+  --data-urlencode "maxAgeInDays=30" \
+  -H "Key: $API_KEY" \
+  -H "Accept: application/json" -o "$JSON_FILE"
+
+if [ $? -ne 0 ] || [ ! -s "$JSON_FILE" ]; then
+    echo "Error: Failed to download blacklist or empty file."
+    exit 1
+fi
+
+# 3. Apache 2.2용 규칙 초기화
+echo "# Auto-generated blacklist for Apache 2.2" &gt; "$APACHE_BLOCK_DENY_FILE"
+echo "# Last updated: $(date)" &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+cat &lt;&lt;EOF &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+&lt;Location "/"&gt;
+    Order allow,deny
+EOF
+
+# 4. Apache 2.4용 규칙 초기화 (Require all granted 추가)
+echo "# Auto-generated blacklist for Apache 2.4" &gt; "$APACHE_BLOCK_REQUIRE_FILE"
+echo "# Last updated: $(date)" &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+cat &lt;&lt;EOF &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+&lt;Location "/"&gt;
+    &lt;RequireAll&gt;
+        Require all granted
+EOF
+
+# 5. 국가별로 IP 정리 및 규칙 생성
+echo "Generating Apache block rules grouped by country..."
+grep -oP '"countryCode":"\K[^"]+|(?&lt;="ipAddress":")[^"]+' "$JSON_FILE" | paste - - | sort | while IFS=$'\t' read -r country ip; do
+    # Apache 2.2
+    if ! grep -q "######### $country #########" "$APACHE_BLOCK_DENY_FILE"; then
+        echo -e "\n    ######### $country #########" &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+    fi
+    echo "    Deny from $ip" &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+
+    # Apache 2.4
+    if ! grep -q "######### $country #########" "$APACHE_BLOCK_REQUIRE_FILE"; then
+        echo -e "\n        ######### $country #########" &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+    fi
+    echo "        Require not ip $ip" &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+done
+
+# 6. Apache 2.2 마무리
+cat &lt;&lt;EOF &gt;&gt; "$APACHE_BLOCK_DENY_FILE"
+    Allow from all
+&lt;/Location&gt;
+EOF
+
+# 7. Apache 2.4 마무리
+cat &lt;&lt;EOF &gt;&gt; "$APACHE_BLOCK_REQUIRE_FILE"
+    &lt;/RequireAll&gt;
+&lt;/Location&gt;
+EOF
+
+echo "Apache block rules generated successfully:"
+echo "  - Apache 2.2 file: $APACHE_BLOCK_DENY_FILE"
+echo "  - Apache 2.4 file: $APACHE_BLOCK_REQUIRE_FILE"</code></pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>황태운 · 시스템 인프라 운영 관리자</p>
+  </footer>
+</body>
+</html>

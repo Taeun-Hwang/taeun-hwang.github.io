@@ -149,28 +149,16 @@
     </section>
 
     <section>
-      <div class="section-header">
-        <h2>대표 프로젝트</h2>
+  <div class="section-header">
+    <h2>대표 프로젝트</h2>
         <a href="projects.html" class="btn-link">전체 프로젝트 보기 →</a>
       </div>
-
-      <article class="project">
-        <h3>AbuseIPDB 기반 Apache 자동 차단</h3>
-        <dl class="facts">
-          <div><dt>문제</dt><dd>악성 IP의 반복 접근을 수동으로 deny 목록에 넣고 재기동해야 했습니다.</dd></div>
-          <div><dt>조치</dt><dd>AbuseIPDB API로 블랙리스트를 받아 Apache 2.2/2.4 규칙 파일을 만들고 crontab으로 갱신했습니다.</dd></div>
-          <div><dt>결과</dt><dd>2.2·2.4가 섞인 환경에서도 같은 주기로 차단 목록을 유지할 수 있게 되었습니다.</dd></div>
-        </dl>
-      </article>
-
-      <article class="project">
-        <h3>Linux 서버 장애 감지 및 알림</h3>
-        <dl class="facts">
-          <div><dt>문제</dt><dd>프로세스·포트 다운이나 리소스 이상을 사람이 로그를 보기 전까지 알기 어려웠습니다.</dd></div>
-          <div><dt>조치</dt><dd>top, ps, df, uptime과 프로세스·포트·저널 로그를 점검하는 스크립트를 만들고 Slack·SMS로 보냈습니다.</dd></div>
-          <div><dt>결과</dt><dd>야간·무인 시간대에도 이상 징후를 바로 받아 장애 인지 지연을 줄였습니다.</dd></div>
-        </dl>
-      </article>
+      <ul>
+        <li><span class="highlight">AbuseIPDB Apache 차단</span> — API로 블랙리스트 수집 후 2.2/2.4 규칙 자동 생성</li>
+        <li><span class="highlight">서버 장애 감지 알림</span> — 리소스·프로세스·포트 점검 후 Slack/SMS 알림</li>
+        <li><span class="highlight">ModSecurity WAF 페이지</span> — 차단 사유 표시 + 해제 요청 폼 구축</li>
+        <li><span class="highlight">SSL 리버스 프록시</span> — 인증서 집중 관리 및 백엔드 HTTP 전환</li>
+      </ul>
     </section>
 
     <section>
